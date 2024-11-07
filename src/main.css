@@ -19,11 +19,11 @@
   text-align: center;
 }
 
-.flip .ctnr {
+.flip .digit-container {
   background: #282828;
 }
 
-.flip .ctnr:last-of-type .digit {
+.flip .digit-container:last-of-type .digit {
   color: #ff6161;
   font-weight: 300;
   transform: scale(0.62);
