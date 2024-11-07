@@ -71,7 +71,38 @@ class SlotMachineFlipper {
     }
 }
 
+class CountChangeFlipper {
+  private flip: NumberFlipper;
+  private count: number;
+
+  constructor(flipperSelector: string, buttonSelector: string, startCount: number) {
+    this.count = startCount;
+    this.flip = new NumberFlipper({
+      node: document.querySelector(flipperSelector) as HTMLElement,
+      from: 0,
+      to: 9999,
+      separator: ","
+    });
+
+    document.querySelector(buttonSelector)?.addEventListener('click', () => {
+      this.changeLength();
+    });
+  }
+
+  private changeLength() {
+    if (this.count === 1) {
+      this.count = 9999;
+    } else {
+      this.count = 1;
+    }
+    this.flip.flipTo({
+      to: this.count
+    });
+  }
+}
+
 // Initialize components
 new CountdownFlipper('.flip');
 new ShuffleFlipper('.separate', '.btn1');
 new SlotMachineFlipper('.slot', '.btn2');
+new CountChangeFlipper('.slot2', '.btn23', 0);

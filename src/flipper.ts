@@ -10,11 +10,11 @@ const convertToReversePaddedArray = (num: { toString: () => string }, length: nu
 
 interface FlipOptions {
   /** Root element for the flip animation */
-  node: HTMLElement;
+  readonly node: HTMLElement;
   /** Starting number */
-  from: number;
+  readonly from?: number;
   /** Target number */
-  to?: number;
+  readonly to?: number;
   /** Animation duration in seconds */
   duration?: number;
   /** Delay before animation starts in seconds */
@@ -38,23 +38,24 @@ interface FlipOptions {
 }
 
 export class NumberFlipper {
-  private initialDigits: number[];
-  private targetDigits: number[];
-  private readonly digitContainers: HTMLElement[];
+  private readonly initialDigits: number[] = [];
+  private readonly targetDigits: number[] = [];
+  private readonly digitContainers: HTMLElement[] = [];
   private readonly animationDuration: number;
   private readonly digitSystem: Array<string | number>;
+  private readonly node: HTMLElement;
+  private readonly containerClassName: string;
+  private readonly digitClassName: string;
+  private readonly separatorClassName: string;
+
   private easingFunction: (position: number) => number;
-  from: number;
-  to: number;
-  private node: HTMLElement;
+  private from: number;
+  private to: number;
   private directAnimation: boolean;
   private separator?: string | string[];
   private separateOnly: number;
   private separateEvery: number;
   private height?: number;
-  private containerClassName: string;
-  private digitClassName: string;
-  private separatorClassName: string;
 
   constructor({
     node,
@@ -75,9 +76,6 @@ export class NumberFlipper {
     digitClassName = 'digit',
     separatorClassName = 'separator',
   }: FlipOptions) {
-    this.initialDigits = [];
-    this.targetDigits = [];
-    this.digitContainers = [];
     this.animationDuration = duration * 1000;
     this.digitSystem = digitSystem;
     this.easingFunction = easeFn;
@@ -137,15 +135,27 @@ export class NumberFlipper {
     this.updateDimensions();
   }
 
-  draw({ per, alter, digit }: { per: number; alter: number; digit: number }) {
-    const newHeight =
-      this.digitContainers[0].clientHeight / (this.digitSystem.length + 1);
-    if (newHeight && this.height !== newHeight) this.height = newHeight;
-    const from = this.initialDigits[digit];
-    const modNum = (((per * alter + from) % 10) + 10) % 10;
-    const translateY = `translateY(${-modNum * (this.height || 0)}px)`;
-    this.digitContainers[digit].style.webkitTransform = translateY;
-    this.digitContainers[digit].style.transform = translateY;
+  private draw({ 
+    percentage, 
+    alteration, 
+    digitIndex 
+  }: { 
+    percentage: number; 
+    alteration: number; 
+    digitIndex: number 
+  }): void {
+    const newHeight = this.digitContainers[0].clientHeight / (this.digitSystem.length + 1);
+    if (newHeight && this.height !== newHeight) {
+      this.height = newHeight;
+    }
+    
+    const from = this.initialDigits[digitIndex];
+    const modNum = (((percentage * alteration + from) % 10) + 10) % 10;
+    const translateY = `translateY(${-modNum * (this.height ?? 0)}px)`;
+    
+    const container = this.digitContainers[digitIndex];
+    container.style.transform = translateY;
+    container.style.webkitTransform = translateY;
   }
 
   updateDimensions() {
@@ -155,9 +165,9 @@ export class NumberFlipper {
     else
       for (let d = 0, len = this.digitContainers.length; d < len; d += 1)
         this.draw({
-          digit: d,
-          per: 1,
-          alter: ~~(this.from / Math.pow(10, d)),
+          digitIndex: d,
+          percentage: 1,
+          alteration: ~~(this.from / Math.pow(10, d)),
         });
   }
 
@@ -167,9 +177,9 @@ export class NumberFlipper {
       const alter = this.targetDigits[d] - this.initialDigits[d];
       temp += alter;
       this.draw({
-        digit: d,
-        per: this.easingFunction(per),
-        alter: this.directAnimation ? alter : temp,
+        digitIndex: d,
+        percentage: this.easingFunction(per),
+        alteration: this.directAnimation ? alter : temp,
       });
       temp *= 10;
     }
