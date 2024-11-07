@@ -80,7 +80,6 @@ class CountChangeFlipper {
     this.flip = new NumberFlipper({
       node: document.querySelector(flipperSelector) as HTMLElement,
       from: 0,
-      to: 9999,
       separator: ","
     });
 
@@ -90,13 +89,14 @@ class CountChangeFlipper {
   }
 
   private changeLength() {
-    if (this.count === 1) {
-      this.count = 9999;
+    if (this.count != 10) {
+      this.count = 10;
     } else {
       this.count = 1;
     }
     this.flip.flipTo({
-      to: this.count
+      to: this.count,
+      adaptiveLength: true
     });
   }
 }

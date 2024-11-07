@@ -1,12 +1,12 @@
-const getMaxNumberLength = (a: string | number, b: string | number): number => {
-  return (a > b ? a : b).toString().length;
-}
+import { getMaxNumberLength, convertToReversePaddedArray } from "./utils";
 
-const convertToReversePaddedArray = (num: { toString: () => string }, length: number): number[] => {
-  const padStart = (str: string, targetLength: number): string => str.length < targetLength ? padStart("0" + str, targetLength) : str;
-  const stringToNumberArray = (str: string): number[] => [...str].map(Number);
-  return stringToNumberArray(padStart(num.toString(), length)).reverse();
-};
+interface FlipToOptions {
+  to: number;
+  duration?: number;
+  easeFn?: (position: number) => number;
+  directAnimation?: boolean;
+  adaptiveLength?: boolean;
+}
 
 interface FlipOptions {
   /** Root element for the flip animation */
@@ -38,8 +38,8 @@ interface FlipOptions {
 }
 
 export class NumberFlipper {
-  private readonly initialDigits: number[] = [];
-  private readonly targetDigits: number[] = [];
+  private initialDigits: number[] = [];
+  private targetDigits: number[] = [];
   private readonly digitContainers: HTMLElement[] = [];
   private readonly animationDuration: number;
   private readonly digitSystem: Array<string | number>;
@@ -101,19 +101,19 @@ export class NumberFlipper {
     this.node.style.position = "relative";
     this.node.style.overflow = "hidden";
     for (let i = 0; i < digits; i += 1) {
-      const ctnr = document.createElement("div");
-      ctnr.className = `${this.containerClassName} ${this.containerClassName}${i}`;
-      ctnr.style.position = "relative";
-      ctnr.style.display = "inline-block";
-      ctnr.style.verticalAlign = "top";
+      const container = document.createElement("div");
+      container.className = `${this.containerClassName} ${this.containerClassName}${i}`;
+      container.style.position = "relative";
+      container.style.display = "inline-block";
+      container.style.verticalAlign = "top";
       [...this.digitSystem, this.digitSystem[0]].forEach((i) => {
         const child = document.createElement("div");
         child.className = this.digitClassName;
         child.innerHTML = `${i}`;
-        ctnr.appendChild(child);
+        container.appendChild(child);
       });
-      this.digitContainers.unshift(ctnr);
-      this.node.appendChild(ctnr);
+      this.digitContainers.unshift(container);
+      this.node.appendChild(container);
       this.initialDigits.push(0);
       if (
         !this.separator ||
@@ -123,13 +123,13 @@ export class NumberFlipper {
           digits - i - this.separateOnly != 1)
       )
         continue;
-      const sprtrStr = typeof this.separator === 'string'
+      const separatorContent = typeof this.separator === 'string'
         ? this.separator
         : (this.separator as string[]).shift();
       const separator = document.createElement("div");
       separator.className = this.separatorClassName;
       separator.style.display = "inline-block";
-      separator.innerHTML = sprtrStr;
+      separator.innerHTML = separatorContent ?? '';
       this.node.appendChild(separator);
     }
     this.updateDimensions();
@@ -155,7 +155,6 @@ export class NumberFlipper {
     
     const container = this.digitContainers[digitIndex];
     container.style.transform = translateY;
-    container.style.webkitTransform = translateY;
   }
 
   updateDimensions() {
@@ -190,18 +189,31 @@ export class NumberFlipper {
     duration = 0,
     easeFn,
     directAnimation,
-  }: {
-    to: number;
-    duration?: number;
-    easeFn?: () => any;
-    directAnimation?: boolean;
-  }): void {
+    adaptiveLength = false,
+  }: FlipToOptions): void {
     if (easeFn) this.easingFunction = easeFn;
     if (directAnimation !== undefined) this.directAnimation = directAnimation;
+
+    const currentLength = this.digitContainers.length;
+    const targetLength = to.toString().length;
+
+    // Recreate flipper if:
+    // 1. adaptiveLength is true and length changes, OR
+    // 2. target number is longer than current length (prevent overflow)
+    if ((adaptiveLength && currentLength !== targetLength) || (!adaptiveLength && targetLength > currentLength)) {
+      this.node.innerHTML = '';
+      this.digitContainers.length = 0;
+      this.initialDigits.length = 0;
+
+      this.initializeHTML(targetLength);
+      this.from = 0;
+    }
+
     this.setSelect(to);
     const len = this.digitContainers.length;
     this.initialDigits = convertToReversePaddedArray(this.from, len);
     this.targetDigits = convertToReversePaddedArray(to, len);
+
     const start = Date.now();
     const dur = duration * 1000 || this.animationDuration;
     const tick = () => {
