@@ -1,39 +1,77 @@
 import "./main.css";
 import { Flip } from "./flipper";
-const $ = (s: any) => document.querySelector(s);
 
-// .flip
-let count = 9999;
-const flip = new Flip({
-  node: $(".flip"),
-  from: count,
-  duration: 0.4
-});
-setInterval(() => {
-  flip.flipTo({
-    to: --count,
-    direct: false
-  });
-}, 1000);
+class CountdownFlipper {
+    private flip: Flip;
+    private count: number;
 
-// .separate
-const sepa = new Flip({
-  node: $(".separate"),
-  from: 888888,
-  separator: ","
-});
-$(".btn1").onclick = () =>
-  sepa.flipTo({
-    to: ~~(Math.random() * 888888)
-  });
+    constructor(selector: string, startCount: number = 9999) {
+        this.count = startCount;
+        this.flip = new Flip({
+            node: document.querySelector(selector) as HTMLElement,
+            from: this.count,
+            duration: 0.4
+        });
+        this.startCountdown();
+    }
 
-// .slot
-const slot = new Flip({
-  node: $(".slot"),
-  from: 777,
-  systemArr: ["🍒", "🍏", "🍍", "🌴", "bar", "🔔", "🍇", "7", "💰", "🍈", "bar"]
-});
-$(".btn2").onclick = () =>
-  slot.flipTo({
-    to: ~~(Math.random() * 999)
-  });
+    private startCountdown() {
+        setInterval(() => {
+            this.flip.flipTo({
+                to: --this.count,
+                direct: false
+            });
+        }, 1000);
+    }
+}
+
+class ShuffleFlipper {
+    private flip: Flip;
+
+    constructor(flipperSelector: string, buttonSelector: string) {
+        this.flip = new Flip({
+            node: document.querySelector(flipperSelector) as HTMLElement,
+            from: 42,
+            to: 9999,
+            separator: ","
+        });
+
+        document.querySelector(buttonSelector)?.addEventListener('click', () => {
+          this.shuffle();
+        });
+    }
+
+    private shuffle() {
+        this.flip.flipTo({
+            to: Math.floor(Math.random() * 8888)
+        });
+    }
+}
+
+class SlotMachineFlipper {
+    private flip: Flip;
+    private readonly symbols = ["🍒", "🍏", "🍍", "🌴", "bar", "🔔", "🍇", "7", "💰", "🍈", "bar"];
+
+    constructor(flipperSelector: string, buttonSelector: string) {
+        this.flip = new Flip({
+            node: document.querySelector(flipperSelector) as HTMLElement,
+            from: 777,
+            systemArr: this.symbols
+        });
+
+        document.querySelector(buttonSelector)?.addEventListener('click', () => {
+            this.roll();
+        });
+    }
+
+    private roll() {
+        this.flip.flipTo({
+            to: Math.floor(Math.random() * 999)
+        });
+    }
+}
+
+// Initialize components
+new CountdownFlipper('.flip');
+new ShuffleFlipper('.separate', '.btn1');
+new SlotMachineFlipper('.slot', '.btn2');
