@@ -1,0 +1,39 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.box {
+  display: inline-block;
+  text-align: center;
+  border-radius: 4px;
+  padding: 12px 8px;
+}
+
+.flip .digit {
+  color: #fff;
+  font-size: 28px;
+  font-weight: 900;
+  padding: 10px 5px;
+  text-align: center;
+}
+
+.flip .ctnr {
+  background: #282828;
+}
+
+.flip .ctnr:last-of-type .digit {
+  color: #ff6161;
+  font-weight: 300;
+  transform: scale(0.62);
+}
+
+.separate {
+  font-size: 20px;
+}
+
+.slot .digit {
+  margin: 0 4px;
+  font-family: futura;
+}
